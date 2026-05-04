@@ -6,6 +6,12 @@ import streamlit as st
 from openai import OpenAI
 from PyPDF2 import PdfReader
 
+client=OpenAI(
+    api_key=st.secrets["groq_api_key"],
+    base_url="https://api.groq.com/openai/v1"
+)
+
+
 st.title("AI RESUME ANALYZER")
 
 resume_file=st.file_uploader( #None
@@ -43,20 +49,20 @@ if st.button("anlyze the resume"):
     with st.spinner("im thinking and anlyzing teh resume wait a sec"):
         # pass 
         system_prompt = f"""
-    Your name is Resume Buddy.
+            Your name is Resume Buddy.
 
-    You are an expert recruiter and ATS analyzer.
+            You are an expert recruiter and ATS analyzer.
 
-    Analysis Type: {analysis_type}
+            Rules:
+            1. Compare resume with job description.
+            2. Give clear score if possible.
+            3. Mention missing skills.
+            4. Suggest improvements.
+            5. Use simple English.
+            6. Use bullet points.
+        """
 
-    Rules:
-    1. Compare resume with job description.
-    2. Give clear score if possible.
-    3. Mention missing skills.
-    4. Suggest improvements.
-    5. Use simple English.
-    6. Use bullet points.
-    """
+
 
         userPrompt=f"""
         
@@ -72,3 +78,21 @@ if st.button("anlyze the resume"):
         
         """
 
+        response=client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role":"system",
+                    "content":system_prompt
+                },
+                {
+                    "role":"user",
+                    "content":userPrompt
+                }
+            ]
+        )
+
+        # print(response)
+        result=response.choices[0].message.content
+
+        st.write(result)
